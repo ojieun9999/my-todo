@@ -8,7 +8,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
-        name: '할일',
+        name: '오늘의 할 일',
         short_name: '할일',
         display: 'standalone',
         background_color: '#f2f2f7',
