@@ -180,7 +180,7 @@ function TodoItem({ todo, dark, selected, onSelect, onToggle, onDelete, onEditCo
       height: removing ? 0 : undefined,
       opacity: removing ? 0 : 1,
       transition: removing ? "height 0.24s ease, opacity 0.24s ease, margin 0.24s" : "none",
-      marginBottom: 8,
+      marginBottom: 6,
     }}>
       {/* → swipe bg */}
       <div style={{
@@ -211,7 +211,7 @@ function TodoItem({ todo, dark, selected, onSelect, onToggle, onDelete, onEditCo
           position: "relative",
           background: selected ? c.accentSub : c.surface,
           borderRadius: 16,
-          padding: "15px 16px",
+          padding: "10px 16px",
           display: "flex", alignItems: "flex-start", gap: 12,
           border: `1.5px solid ${selected ? c.accent : (isEditing ? c.accent : c.border)}`,
           transform: `translateX(${offsetX}px) scale(${pressed ? 0.985 : 1})`,
