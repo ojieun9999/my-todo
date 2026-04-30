@@ -48,6 +48,13 @@ const T = {
   },
 };
 
+const formatDate = (ts) => {
+  const d = new Date(ts);
+  const date = d.toLocaleDateString("ko-KR", { month: "short", day: "numeric" });
+  const time = d.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
+  return `${date} ${time}`;
+};
+
 const INITIAL_TODOS = [
   { id: 1, text: "디자인 시스템 문서 작성", done: false, createdAt: Date.now() - 86400000 },
  /* { id: 2, text: "주간 보고서 제출", done: false, createdAt: Date.now() - 3600000 },
@@ -229,6 +236,8 @@ function TodoItem({ todo, dark, selected, onSelect, onToggle, onDelete, onEditCo
           <div
             onClick={(e) => { e.stopPropagation(); if (!isEditing) onToggle(todo.id); }}
             onMouseDown={e => e.stopPropagation()}
+            onTouchStart={e => e.stopPropagation()}
+            onTouchEnd={(e) => { e.stopPropagation(); if (!isEditing) onToggle(todo.id); }}
             style={{
               width: 22, height: 22, minWidth: 22, minHeight: 22, borderRadius: 11, flexShrink: 0,
               border: `1.5px solid ${todo.done ? c.accent : c.muted}`,
@@ -276,6 +285,15 @@ function TodoItem({ todo, dark, selected, onSelect, onToggle, onDelete, onEditCo
               letterSpacing: "-0.01em",
             }}>{todo.text}</span>
           )}
+          <div style={{
+            fontSize: 12, color: c.sub,
+            marginTop: 5, letterSpacing: "-0.01em",
+          }}>
+            {isTrash
+              ? `삭제됨 · ${formatDate(todo.trashedAt)}`
+              : formatDate(todo.createdAt)
+            }
+          </div>
         </div>
 
         {/* Save btn (edit mode) */}
@@ -630,4 +648,3 @@ function EmptyState({ c, text }) {
       fontSize: 14, color: c.sub, letterSpacing: "-0.01em",
     }}>{text}</div>
   );
-}
