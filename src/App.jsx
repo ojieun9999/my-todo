@@ -47,13 +47,6 @@ const T = {
     toggleKnob:"#3182f6",
   },
 };
-/*
-const formatDate = (ts) => {
-  const d = new Date(ts);
-  const date = d.toLocaleDateString("ko-KR", { month: "short", day: "numeric" });
-  const time = d.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
-  return `${date} ${time}`;
-};*/
 
 const INITIAL_TODOS = [
   { id: 1, text: "디자인 시스템 문서 작성", done: false, createdAt: Date.now() - 86400000 },
@@ -283,16 +276,6 @@ function TodoItem({ todo, dark, selected, onSelect, onToggle, onDelete, onEditCo
               letterSpacing: "-0.01em",
             }}>{todo.text}</span>
           )}
-          /*
-          <div style={{
-            fontSize: 12, color: c.sub,
-            marginTop: 5, letterSpacing: "-0.01em",
-          }}>
-            {isTrash
-              ? `삭제됨 · ${formatDate(todo.trashedAt)}`
-              : formatDate(todo.createdAt)
-            }
-          </div>*/
         </div>
 
         {/* Save btn (edit mode) */}
