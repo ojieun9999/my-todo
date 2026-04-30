@@ -324,8 +324,18 @@ function TodoItem({ todo, dark, selected, onSelect, onToggle, onDelete, onEditCo
 // ── App ───────────────────────────────────────────────────────
 export default function App() {
   const [dark, setDark]       = useState(false);
-  const [todos, setTodos]     = useState(INITIAL_TODOS);
-  const [trash, setTrash]     = useState([]);
+  const [todos, setTodos] = useState(() => {
+  try {
+    const saved = localStorage.getItem("todos");
+    return saved ? JSON.parse(saved) : INITIAL_TODOS;
+  } catch { return INITIAL_TODOS; }
+});
+const [trash, setTrash] = useState(() => {
+  try {
+    const saved = localStorage.getItem("trash");
+    return saved ? JSON.parse(saved) : [];
+  } catch { return []; }
+});
   const [input, setInput]     = useState("");
   const [filter, setFilter]   = useState("all");
   const [selectedId, setSelectedId] = useState(null);
@@ -333,6 +343,13 @@ export default function App() {
   const wrapperRef = useRef(null);
   const headerRef  = useRef(null);
   const c = dark ? T.dk : T.lt;
+  useEffect(() => {
+  localStorage.setItem("todos", JSON.stringify(todos));
+}, [todos]);
+
+useEffect(() => {
+  localStorage.setItem("trash", JSON.stringify(trash));
+}, [trash]);
   const showTrash = filter === "trash";
 
   useEffect(() => {
