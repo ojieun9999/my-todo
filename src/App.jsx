@@ -56,10 +56,10 @@ const formatDate = (ts) => {
 };
 
 const INITIAL_TODOS = [
-  /*{ id: 1, text: "디자인 시스템 문서 작성", done: false, createdAt: Date.now() - 86400000 },
+  { id: 1, text: "디자인 시스템 문서 작성", done: false, createdAt: Date.now() - 86400000 },
   { id: 2, text: "주간 보고서 제출", done: false, createdAt: Date.now() - 3600000 },
   { id: 3, text: "독서 30분", done: true,  createdAt: Date.now() - 7200000 },
-  { id: 4, text: "팀 미팅 준비", done: false, createdAt: Date.now() - 1800000 },*/
+  { id: 4, text: "팀 미팅 준비", done: false, createdAt: Date.now() - 1800000 },
 ];
 
 // ── TodoItem ──────────────────────────────────────────────────
@@ -323,19 +323,21 @@ function TodoItem({ todo, dark, selected, onSelect, onToggle, onDelete, onEditCo
 
 // ── App ───────────────────────────────────────────────────────
 export default function App() {
-  const [dark, setDark]       = useState(false);
+  const [dark, setDark] = useState(() => {
+    try { return localStorage.getItem("dark") === "true"; } catch { return false; }
+  });
   const [todos, setTodos] = useState(() => {
-  try {
-    const saved = localStorage.getItem("todos");
-    return saved ? JSON.parse(saved) : INITIAL_TODOS;
-  } catch { return INITIAL_TODOS; }
-});
-const [trash, setTrash] = useState(() => {
-  try {
-    const saved = localStorage.getItem("trash");
-    return saved ? JSON.parse(saved) : [];
-  } catch { return []; }
-});
+    try {
+      const saved = localStorage.getItem("todos");
+      return saved ? JSON.parse(saved) : INITIAL_TODOS;
+    } catch { return INITIAL_TODOS; }
+  });
+  const [trash, setTrash] = useState(() => {
+    try {
+      const saved = localStorage.getItem("trash");
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
   const [input, setInput]     = useState("");
   const [filter, setFilter]   = useState("all");
   const [selectedId, setSelectedId] = useState(null);
@@ -343,14 +345,18 @@ const [trash, setTrash] = useState(() => {
   const wrapperRef = useRef(null);
   const headerRef  = useRef(null);
   const c = dark ? T.dk : T.lt;
-  useEffect(() => {
-  localStorage.setItem("todos", JSON.stringify(todos));
-}, [todos]);
-
-useEffect(() => {
-  localStorage.setItem("trash", JSON.stringify(trash));
-}, [trash]);
   const showTrash = filter === "trash";
+
+  // localStorage 저장
+  useEffect(() => {
+    try { localStorage.setItem("todos", JSON.stringify(todos)); } catch {}
+  }, [todos]);
+  useEffect(() => {
+    try { localStorage.setItem("trash", JSON.stringify(trash)); } catch {}
+  }, [trash]);
+  useEffect(() => {
+    try { localStorage.setItem("dark", String(dark)); } catch {}
+  }, [dark]);
 
   useEffect(() => {
     const handleOutside = (e) => {
