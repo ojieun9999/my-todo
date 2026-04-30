@@ -55,12 +55,12 @@ const formatDate = (ts) => {
   return `${date} ${time}`;
 };
 
-const INITIAL_TODOS = [
+/*const INITIAL_TODOS = [
   { id: 1, text: "디자인 시스템 문서 작성", done: false, createdAt: Date.now() - 86400000 },
-  /*{ id: 2, text: "주간 보고서 제출", done: false, createdAt: Date.now() - 3600000 },
+  { id: 2, text: "주간 보고서 제출", done: false, createdAt: Date.now() - 3600000 },
   { id: 3, text: "독서 30분", done: true,  createdAt: Date.now() - 7200000 },
-  { id: 4, text: "팀 미팅 준비", done: false, createdAt: Date.now() - 1800000 },*/
-];
+  { id: 4, text: "팀 미팅 준비", done: false, createdAt: Date.now() - 1800000 },
+];*/
 
 // ── TodoItem ──────────────────────────────────────────────────
 function TodoItem({ todo, dark, selected, onSelect, onToggle, onDelete, onEditConfirm, isTrash = false, onRestore }) {
