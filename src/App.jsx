@@ -47,13 +47,13 @@ const T = {
     toggleKnob:"#3182f6",
   },
 };
-
+/*
 const formatDate = (ts) => {
   const d = new Date(ts);
   const date = d.toLocaleDateString("ko-KR", { month: "short", day: "numeric" });
   const time = d.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
   return `${date} ${time}`;
-};
+};*/
 
 const INITIAL_TODOS = [
   { id: 1, text: "디자인 시스템 문서 작성", done: false, createdAt: Date.now() - 86400000 },
