@@ -283,6 +283,7 @@ function TodoItem({ todo, dark, selected, onSelect, onToggle, onDelete, onEditCo
               letterSpacing: "-0.01em",
             }}>{todo.text}</span>
           )}
+          /*
           <div style={{
             fontSize: 12, color: c.sub,
             marginTop: 5, letterSpacing: "-0.01em",
@@ -291,7 +292,7 @@ function TodoItem({ todo, dark, selected, onSelect, onToggle, onDelete, onEditCo
               ? `삭제됨 · ${formatDate(todo.trashedAt)}`
               : formatDate(todo.createdAt)
             }
-          </div>
+          </div>*/
         </div>
 
         {/* Save btn (edit mode) */}
