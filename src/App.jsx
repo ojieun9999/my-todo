@@ -398,10 +398,14 @@ export default function App() {
   const permanentDelete = (id) => setTrash(p => p.filter(t => t.id !== id));
   const clearTrash = () => setTrash([]);
 
-  const filtered = todos.filter(t =>
-    filter === "all" ? true : filter === "active" ? !t.done : filter === "done" ? t.done : true
-  );
-
+  const filtered = todos
+  .filter(t => filter === "all" ? true : filter === "active" ? !t.done : filter === "done" ? t.done : true)
+  .sort((a, b) => {
+    if (filter !== "all") return 0;
+    if (a.done === b.done) return 0;
+    return a.done ? 1 : -1;
+  });
+  
   const selectedIndex = filtered.findIndex(t => t.id === selectedId);
   const canUp   = selectedId !== null && selectedIndex > 0;
   const canDown = selectedId !== null && selectedIndex < filtered.length - 1;
