@@ -406,6 +406,7 @@ export default function App() {
     return a.done ? 1 : -1;
   });
   
+  loop
   const selectedIndex = filtered.findIndex(t => t.id === selectedId);
   const canUp   = selectedId !== null && selectedIndex > 0;
   const canDown = selectedId !== null && selectedIndex < filtered.length - 1;
