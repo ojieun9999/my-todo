@@ -1,4 +1,11 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { createClient } from "@supabase/supabase-js";
+
+// ─── Supabase 설정 (본인 프로젝트 값으로 교체) ──────────────────
+const SUPABASE_URL = "여기에 본인 Project URL 입력";
+const SUPABASE_ANON_KEY = "여기에 본인 anon public key 입력";
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const LONG_PRESS_DURATION = 500;
 const SWIPE_COMMIT = 180;
@@ -6,45 +13,19 @@ const SWIPE_THRESHOLD = 60;
 
 // ── Toss-style design tokens ──────────────────────────────────
 const T = {
-  // dark
   dk: {
-    bg:        "#111111",
-    surface:   "#1c1c1e",
-    surface2:  "#2c2c2e",
-    border:    "#2c2c2e",
-    tabBg:     "#1c1c1e",
-    tabActive: "#2c2c2e",
-    label:     "#f2f2f7",
-    sub:       "#8e8e93",
-    muted:     "#3a3a3c",
-    accent:    "#3182f6",
-    accentSub: "rgba(49,130,246,0.12)",
-    done:      "#48484a",
-    danger:    "#ff3b30",
-    success:   "#34c759",
-    restore:   "#3182f6",
-    toggle:    "#2c2c2e",
-    toggleKnob:"#3182f6",
+    bg: "#111111", surface: "#1c1c1e", surface2: "#2c2c2e", border: "#2c2c2e",
+    tabBg: "#1c1c1e", tabActive: "#2c2c2e", label: "#f2f2f7", sub: "#8e8e93",
+    muted: "#3a3a3c", accent: "#3182f6", accentSub: "rgba(49,130,246,0.12)",
+    done: "#48484a", danger: "#ff3b30", success: "#34c759", restore: "#3182f6",
+    toggle: "#2c2c2e", toggleKnob: "#3182f6",
   },
-  // light
   lt: {
-    bg:        "#f2f2f7",
-    surface:   "#ffffff",
-    surface2:  "#f2f2f7",
-    border:    "#e5e5ea",
-    tabBg:     "#e5e5ea",
-    tabActive: "#ffffff",
-    label:     "#111111",
-    sub:       "#8e8e93",
-    muted:     "#c7c7cc",
-    accent:    "#3182f6",
-    accentSub: "rgba(49,130,246,0.08)",
-    done:      "#c7c7cc",
-    danger:    "#ff3b30",
-    success:   "#34c759",
-    restore:   "#3182f6",
-    toggle:    "#e5e5ea",
-    toggleKnob:"#3182f6",
+    bg: "#f2f2f7", surface: "#ffffff", surface2: "#f2f2f7", border: "#e5e5ea",
+    tabBg: "#e5e5ea", tabActive: "#ffffff", label: "#111111", sub: "#8e8e93",
+    muted: "#c7c7cc", accent: "#3182f6", accentSub: "rgba(49,130,246,0.08)",
+    done: "#c7c7cc", danger: "#ff3b30", success: "#34c759", restore: "#3182f6",
+    toggle: "#e5e5ea", toggleKnob: "#3182f6",
   },
 };
 
@@ -57,10 +38,18 @@ const formatDate = (ts) => {
 
 const INITIAL_TODOS = [
   { id: 1, text: "디자인 시스템 문서 작성", done: false, createdAt: Date.now() - 86400000 },
- /* { id: 2, text: "주간 보고서 제출", done: false, createdAt: Date.now() - 3600000 },
+  { id: 2, text: "주간 보고서 제출", done: false, createdAt: Date.now() - 3600000 },
   { id: 3, text: "독서 30분", done: true,  createdAt: Date.now() - 7200000 },
-  { id: 4, text: "팀 미팅 준비", done: false, createdAt: Date.now() - 1800000 },*/
+  { id: 4, text: "팀 미팅 준비", done: false, createdAt: Date.now() - 1800000 },
 ];
+
+// 6자리 랜덤 동기화 코드 생성 (혼동되는 문자 제외: 0/O, 1/I/L 등)
+const generateSyncCode = () => {
+  const chars = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
+  let code = "";
+  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+};
 
 // ── TodoItem ──────────────────────────────────────────────────
 function TodoItem({ todo, dark, selected, onSelect, onToggle, onDelete, onEditConfirm, isTrash = false, onRestore }) {
@@ -182,7 +171,6 @@ function TodoItem({ todo, dark, selected, onSelect, onToggle, onDelete, onEditCo
       transition: removing ? "height 0.24s ease, opacity 0.24s ease, margin 0.24s" : "none",
       marginBottom: 6,
     }}>
-      {/* → swipe bg */}
       <div style={{
         position: "absolute", inset: 0, borderRadius: 16,
         background: isTrash ? c.restore : c.success,
@@ -193,7 +181,6 @@ function TodoItem({ todo, dark, selected, onSelect, onToggle, onDelete, onEditCo
           {isTrash ? "복원" : (todo.done ? "되돌리기" : "완료")}
         </span>
       </div>
-      {/* ← swipe bg */}
       <div style={{
         position: "absolute", inset: 0, borderRadius: 16,
         background: c.danger,
@@ -205,7 +192,6 @@ function TodoItem({ todo, dark, selected, onSelect, onToggle, onDelete, onEditCo
         </span>
       </div>
 
-      {/* card */}
       <div
         style={{
           position: "relative",
@@ -231,7 +217,6 @@ function TodoItem({ todo, dark, selected, onSelect, onToggle, onDelete, onEditCo
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-        {/* Checkbox */}
         {!isTrash && (
           <div
             onClick={(e) => { e.stopPropagation(); if (!isEditing) onToggle(todo.id); }}
@@ -254,7 +239,6 @@ function TodoItem({ todo, dark, selected, onSelect, onToggle, onDelete, onEditCo
           </div>
         )}
 
-        {/* Text + date */}
         <div style={{ flex: 1, minWidth: 0 }}>
           {isEditing ? (
             <textarea
@@ -285,18 +269,13 @@ function TodoItem({ todo, dark, selected, onSelect, onToggle, onDelete, onEditCo
               letterSpacing: "-0.01em",
             }}>{todo.text}</span>
           )}
-          <div style={{
-            fontSize: 12, color: c.sub,
-            marginTop: 5, letterSpacing: "-0.01em",
-          }}>
-            {isTrash
-              ? `삭제됨 · ${formatDate(todo.trashedAt)}`
-              : formatDate(todo.createdAt)
-            }
-          </div>
+          {isTrash && (
+            <div style={{ fontSize: 12, color: c.sub, marginTop: 5, letterSpacing: "-0.01em" }}>
+              {`삭제됨 · ${formatDate(todo.trashedAt)}`}
+            </div>
+          )}
         </div>
 
-        {/* Save btn (edit mode) */}
         {isEditing && (
           <button
             onClick={(e) => { e.stopPropagation(); confirmEdit(); }}
@@ -310,14 +289,107 @@ function TodoItem({ todo, dark, selected, onSelect, onToggle, onDelete, onEditCo
           >저장</button>
         )}
 
-        {/* Selected dot */}
         {selected && !isEditing && (
-          <div style={{
-            width: 7, height: 7, borderRadius: "50%",
-            background: c.accent,
-            flexShrink: 0, alignSelf: "center",
-          }} />
+          <div style={{ width: 7, height: 7, borderRadius: "50%", background: c.accent, flexShrink: 0, alignSelf: "center" }} />
         )}
+      </div>
+    </div>
+  );
+}
+
+// ── Sync Panel ───────────────────────────────────────────────
+function SyncPanel({ c, syncCode, onClose, onJoinCode, syncStatus }) {
+  const [inputCode, setInputCode] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(syncCode).then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      });
+    }
+  };
+
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: "fixed", inset: 0, zIndex: 200,
+        background: "rgba(0,0,0,0.45)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: 24,
+      }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          background: c.surface, borderRadius: 20, padding: 24,
+          width: "100%", maxWidth: 360,
+        }}
+      >
+        <h3 style={{ margin: "0 0 4px", fontSize: 17, fontWeight: 700, color: c.label, letterSpacing: "-0.02em" }}>
+          기기 간 동기화
+        </h3>
+        <p style={{ margin: "0 0 18px", fontSize: 12.5, color: c.sub, lineHeight: 1.5 }}>
+          {syncStatus === "synced"
+            ? "이 코드를 다른 기기에서 입력하면 같은 목록을 사용할 수 있어요."
+            : "연결 중..."}
+        </p>
+
+        <div style={{
+          background: c.surface2, borderRadius: 14, padding: "16px",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          marginBottom: 16,
+        }}>
+          <span style={{ fontSize: 22, fontWeight: 800, letterSpacing: "0.12em", color: c.label, fontFamily: "monospace" }}>
+            {syncCode || "------"}
+          </span>
+          <button onClick={handleCopy} style={{
+            padding: "7px 12px", borderRadius: 9, border: "none",
+            background: copied ? c.success : c.accent, color: "#fff",
+            fontSize: 12, fontWeight: 600, cursor: "pointer",
+          }}>{copied ? "복사됨" : "복사"}</button>
+        </div>
+
+        <div style={{ height: 1, background: c.border, margin: "16px 0" }} />
+
+        <p style={{ margin: "0 0 8px", fontSize: 12.5, fontWeight: 600, color: c.label }}>
+          다른 기기의 코드로 연결하기
+        </p>
+        <div style={{ display: "flex", gap: 8 }}>
+          <input
+            value={inputCode}
+            onChange={e => setInputCode(e.target.value.toUpperCase())}
+            placeholder="6자리 코드 입력"
+            maxLength={6}
+            style={{
+              flex: 1, padding: "10px 12px", borderRadius: 10,
+              border: `1.5px solid ${c.border}`, background: c.surface2,
+              color: c.label, fontSize: 14, letterSpacing: "0.08em",
+              outline: "none", fontFamily: "monospace",
+            }}
+          />
+          <button
+            onClick={() => { if (inputCode.trim().length === 6) onJoinCode(inputCode.trim()); }}
+            style={{
+              padding: "10px 16px", borderRadius: 10, border: "none",
+              background: inputCode.trim().length === 6 ? c.accent : c.surface2,
+              color: inputCode.trim().length === 6 ? "#fff" : c.muted,
+              fontSize: 13, fontWeight: 600, cursor: "pointer",
+            }}
+          >연결</button>
+        </div>
+        <p style={{ margin: "10px 0 0", fontSize: 11, color: c.sub, lineHeight: 1.5 }}>
+          ⚠️ 연결하면 이 기기의 기존 목록은 입력한 코드의 목록으로 교체돼요.
+        </p>
+
+        <button onClick={onClose} style={{
+          width: "100%", marginTop: 18, padding: "11px 0",
+          borderRadius: 10, border: "none",
+          background: "transparent", color: c.sub,
+          fontSize: 13, fontWeight: 600, cursor: "pointer",
+        }}>닫기</button>
       </div>
     </div>
   );
@@ -344,21 +416,103 @@ export default function App() {
   const [filter, setFilter]   = useState("all");
   const [selectedId, setSelectedId] = useState(null);
 
+  // ── Sync state ──
+  const [syncCode, setSyncCode] = useState(() => {
+    try { return localStorage.getItem("syncCode") || null; } catch { return null; }
+  });
+  const [syncStatus, setSyncStatus] = useState("idle"); // idle | syncing | synced | error
+  const [showSyncPanel, setShowSyncPanel] = useState(false);
+  const isFirstLoad = useRef(true);
+  const skipNextPush = useRef(false);
+
   const wrapperRef = useRef(null);
   const headerRef  = useRef(null);
   const c = dark ? T.dk : T.lt;
   const showTrash = filter === "trash";
 
-  // localStorage 저장
+  // localStorage 백업 (오프라인 캐시용)
+  useEffect(() => { try { localStorage.setItem("todos", JSON.stringify(todos)); } catch {} }, [todos]);
+  useEffect(() => { try { localStorage.setItem("trash", JSON.stringify(trash)); } catch {} }, [trash]);
+  useEffect(() => { try { localStorage.setItem("dark", String(dark)); } catch {} }, [dark]);
+
+  // ── 최초 진입: 동기화 코드 없으면 새로 발급 + 현재 데이터 업로드 ──
   useEffect(() => {
-    try { localStorage.setItem("todos", JSON.stringify(todos)); } catch {}
-  }, [todos]);
+    const init = async () => {
+      let code = syncCode;
+      if (!code) {
+        code = generateSyncCode();
+        try { localStorage.setItem("syncCode", code); } catch {}
+        setSyncCode(code);
+        await supabase.from("app_sync").upsert({
+          code,
+          data: { todos, trash, dark },
+          updated_at: new Date().toISOString(),
+        });
+        setSyncStatus("synced");
+      } else {
+        // 기존 코드 있으면 클라우드 데이터로 덮어쓰기 (클라우드가 항상 최신 기준)
+        setSyncStatus("syncing");
+        const { data, error } = await supabase
+          .from("app_sync")
+          .select("data")
+          .eq("code", code)
+          .maybeSingle();
+        if (!error && data?.data) {
+          skipNextPush.current = true;
+          if (Array.isArray(data.data.todos)) setTodos(data.data.todos);
+          if (Array.isArray(data.data.trash)) setTrash(data.data.trash);
+          if (typeof data.data.dark === "boolean") setDark(data.data.dark);
+        }
+        setSyncStatus("synced");
+      }
+      isFirstLoad.current = false;
+    };
+    init();
+  }, []);
+
+  // ── 변경 사항 클라우드에 업로드 (디바운스) ──
   useEffect(() => {
-    try { localStorage.setItem("trash", JSON.stringify(trash)); } catch {}
-  }, [trash]);
-  useEffect(() => {
-    try { localStorage.setItem("dark", String(dark)); } catch {}
-  }, [dark]);
+    if (isFirstLoad.current || !syncCode) return;
+    if (skipNextPush.current) { skipNextPush.current = false; return; }
+
+    const t = setTimeout(async () => {
+      setSyncStatus("syncing");
+      const { error } = await supabase.from("app_sync").upsert({
+        code: syncCode,
+        data: { todos, trash, dark },
+        updated_at: new Date().toISOString(),
+      });
+      setSyncStatus(error ? "error" : "synced");
+    }, 600);
+
+    return () => clearTimeout(t);
+  }, [todos, trash, dark, syncCode]);
+
+  // ── 다른 기기 코드로 연결 ──
+  const joinSyncCode = async (code) => {
+    setSyncStatus("syncing");
+    const { data, error } = await supabase
+      .from("app_sync")
+      .select("data")
+      .eq("code", code)
+      .maybeSingle();
+
+    if (error || !data) {
+      setSyncStatus("error");
+      alert("해당 코드를 찾을 수 없어요. 코드를 다시 확인해주세요.");
+      return;
+    }
+
+    skipNextPush.current = true;
+    setTodos(Array.isArray(data.data?.todos) ? data.data.todos : []);
+    setTrash(Array.isArray(data.data?.trash) ? data.data.trash : []);
+    if (typeof data.data?.dark === "boolean") setDark(data.data.dark);
+
+    try { localStorage.setItem("syncCode", code); } catch {}
+    setSyncCode(code);
+    setSyncStatus("synced");
+    setShowSyncPanel(false);
+  };
 
   useEffect(() => {
     const handleOutside = (e) => {
@@ -399,14 +553,13 @@ export default function App() {
   const clearTrash = () => setTrash([]);
 
   const filtered = todos
-  .filter(t => filter === "all" ? true : filter === "active" ? !t.done : filter === "done" ? t.done : true)
-  .sort((a, b) => {
-    if (filter !== "all") return 0;
-    if (a.done === b.done) return 0;
-    return a.done ? 1 : -1;
-  });
-  
-  loop
+    .filter(t => filter === "all" ? true : filter === "active" ? !t.done : filter === "done" ? t.done : true)
+    .sort((a, b) => {
+      if (filter !== "all") return 0;
+      if (a.done === b.done) return 0;
+      return a.done ? 1 : -1;
+    });
+
   const selectedIndex = filtered.findIndex(t => t.id === selectedId);
   const canUp   = selectedId !== null && selectedIndex > 0;
   const canDown = selectedId !== null && selectedIndex < filtered.length - 1;
@@ -441,24 +594,24 @@ export default function App() {
 
   return (
     <div style={{
-      minHeight: "100dvh",
-      height: "100dvh",
-      overflow: "hidden",
-      background: c.bg,
-      transition: "background 0.3s",
+      minHeight: "100dvh", height: "100dvh", overflow: "hidden",
+      background: c.bg, transition: "background 0.3s",
       fontFamily: "-apple-system, 'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif",
     }}>
-      <div style={{ maxWidth: 480, margin: "0 auto", paddingBottom: 100 }}>
+      <div style={{
+        maxWidth: 480, margin: "0 auto",
+        height: "100dvh", overflowY: "auto",
+        WebkitOverflowScrolling: "touch",
+        paddingBottom: 100,
+      }}>
 
         {/* ── Sticky header ── */}
         <div ref={headerRef} style={{
           position: "sticky", top: 0, zIndex: 50,
-          background: c.bg,
-          padding: "52px 20px 0",
+          background: c.bg, padding: "52px 20px 0",
           transition: "background 0.3s",
         }}>
 
-          {/* Title row */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 }}>
             <div>
               <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: c.sub, letterSpacing: "-0.01em", marginBottom: 4 }}>
@@ -470,6 +623,24 @@ export default function App() {
             </div>
 
             <div style={{ display: "flex", alignItems: "center", gap: 8, paddingTop: 4 }}>
+              {/* Sync button */}
+              <button onClick={() => setShowSyncPanel(true)} style={{
+                width: 36, height: 30, borderRadius: 12, border: "none",
+                background: c.surface2, position: "relative", cursor: "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 14,
+              }}>
+                🔗
+                <div style={{
+                  position: "absolute", top: -2, right: -2,
+                  width: 8, height: 8, borderRadius: "50%",
+                  background: syncStatus === "synced" ? c.success
+                    : syncStatus === "syncing" ? "#f5a623"
+                    : syncStatus === "error" ? c.danger : c.muted,
+                  border: `2px solid ${c.bg}`,
+                }} />
+              </button>
+
               {/* Dark / Light toggle */}
               <button onClick={() => setDark(p => !p)} style={{
                 width: 56, height: 30, borderRadius: 15, border: "none",
@@ -488,13 +659,7 @@ export default function App() {
             </div>
           </div>
 
-          {/* Filter tabs */}
-          <div style={{
-            display: "flex", gap: 0,
-            background: c.tabBg,
-            borderRadius: 12, padding: 3,
-            marginBottom: 8,
-          }}>
+          <div style={{ display: "flex", gap: 0, background: c.tabBg, borderRadius: 12, padding: 3, marginBottom: 8 }}>
             {TABS.map(([val, label]) => {
               const active = filter === val;
               const isTrashTab = val === "trash";
@@ -502,9 +667,7 @@ export default function App() {
                 <button key={val} onClick={() => { setFilter(val); setSelectedId(null); }} style={{
                   flex: 1, padding: "8px 4px", borderRadius: 10, border: "none",
                   background: active ? c.tabActive : "transparent",
-                  color: active
-                    ? (isTrashTab ? c.danger : c.label)
-                    : c.sub,
+                  color: active ? (isTrashTab ? c.danger : c.label) : c.sub,
                   fontSize: 12, fontWeight: active ? 600 : 400,
                   cursor: "pointer", transition: "all 0.15s",
                   letterSpacing: "-0.01em", whiteSpace: "nowrap",
@@ -514,26 +677,21 @@ export default function App() {
             })}
           </div>
 
-          {/* Hint + reorder row */}
           <div style={{
             display: "flex", justifyContent: "space-between", alignItems: "center",
             fontSize: 12, color: c.sub, letterSpacing: "-0.01em",
-            padding: "8px 2px 10px",
-            minHeight: 36,
+            padding: "8px 2px 10px", minHeight: 36,
           }}>
             {showTrash ? (
               <>
                 <span>→ 복원 · ← 완전삭제</span>
                 {trash.length > 0 && (
-                  <span onClick={clearTrash} style={{ color: c.danger, cursor: "pointer", fontWeight: 600 }}>
-                    전체 삭제
-                  </span>
+                  <span onClick={clearTrash} style={{ color: c.danger, cursor: "pointer", fontWeight: 600 }}>전체 삭제</span>
                 )}
               </>
             ) : (
               <>
                 <span>← 삭제 · → 완료 · 탭 선택</span>
-                {/* Reorder buttons — 탭 아래 우측 */}
                 <div style={{
                   display: "flex", gap: 4, alignItems: "center",
                   maxWidth: (selectedId !== null) ? 100 : 0,
@@ -568,7 +726,7 @@ export default function App() {
         <div style={{ padding: "0 20px" }} ref={wrapperRef}>
           {showTrash ? (
             trash.length === 0 ? (
-              <EmptyState dark={dark} c={c} text="삭제된 항목이 없어요" />
+              <EmptyState c={c} text="삭제된 항목이 없어요" />
             ) : (
               trash.map(todo => (
                 <TodoItem key={todo.id} todo={todo} dark={dark}
@@ -581,7 +739,38 @@ export default function App() {
           ) : (
             <>
               {filtered.length === 0 ? (
-                <EmptyState dark={dark} c={c} text="할 일이 없어요 🎉" />
+                <EmptyState c={c} text="할 일이 없어요 🎉" />
+              ) : filter === "all" ? (
+                <>
+                  {filtered.filter(t => !t.done).length > 0 && (
+                    <>
+                      <SectionLabel c={c} text="미완료" count={filtered.filter(t => !t.done).length} />
+                      {filtered.filter(t => !t.done).map(todo => (
+                        <TodoItem key={todo.id} todo={todo} dark={dark}
+                          selected={selectedId === todo.id}
+                          onSelect={handleSelect}
+                          onToggle={(id) => setTodos(p => p.map(t => t.id === id ? { ...t, done: !t.done } : t))}
+                          onDelete={deleteTodo}
+                          onEditConfirm={handleEditConfirm}
+                        />
+                      ))}
+                    </>
+                  )}
+                  {filtered.filter(t => t.done).length > 0 && (
+                    <>
+                      <SectionLabel c={c} text="완료" count={filtered.filter(t => t.done).length} />
+                      {filtered.filter(t => t.done).map(todo => (
+                        <TodoItem key={todo.id} todo={todo} dark={dark}
+                          selected={selectedId === todo.id}
+                          onSelect={handleSelect}
+                          onToggle={(id) => setTodos(p => p.map(t => t.id === id ? { ...t, done: !t.done } : t))}
+                          onDelete={deleteTodo}
+                          onEditConfirm={handleEditConfirm}
+                        />
+                      ))}
+                    </>
+                  )}
+                </>
               ) : (
                 filtered.map(todo => (
                   <TodoItem key={todo.id} todo={todo} dark={dark}
@@ -593,25 +782,20 @@ export default function App() {
                   />
                 ))
               )}
-
             </>
           )}
         </div>
 
         {/* ── Fixed bottom input ── */}
         <div style={{
-          position: "fixed", bottom: 0, left: 0, right: 0,
-          zIndex: 100,
-          background: c.bg,
-          borderTop: `1px solid ${c.border}`,
+          position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 100,
+          background: c.bg, borderTop: `1px solid ${c.border}`,
           padding: "12px 20px",
           paddingBottom: "calc(12px + env(safe-area-inset-bottom))",
         }}>
           <div style={{
             maxWidth: 480, margin: "0 auto",
-            background: c.surface,
-            borderRadius: 14,
-            padding: "10px 14px",
+            background: c.surface, borderRadius: 14, padding: "10px 14px",
             display: "flex", gap: 10, alignItems: "center",
             border: `1.5px solid ${c.border}`,
           }}>
@@ -619,37 +803,49 @@ export default function App() {
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addTodo(); } }}
-              onFocus={e => {
-                // iOS Safari 키보드 올라올 때 화면 크기 변경 방지
-                setTimeout(() => { e.target.scrollIntoView({ block: "center" }); }, 300);
-              }}
+              onFocus={e => { setTimeout(() => { e.target.scrollIntoView({ block: "center" }); }, 300); }}
               placeholder="할 일 추가"
               style={{
                 flex: 1, background: "transparent", border: "none", outline: "none",
-                fontSize: 14, color: c.label, fontFamily: "inherit",
-                letterSpacing: "-0.01em",
+                fontSize: 14, color: c.label, fontFamily: "inherit", letterSpacing: "-0.01em",
               }}
             />
             <button onClick={addTodo} style={{
               width: 32, height: 32, borderRadius: 10, border: "none",
               background: input.trim() ? c.accent : c.surface2,
               color: input.trim() ? "#fff" : c.muted,
-              fontSize: 20, lineHeight: 1,
-              cursor: "pointer",
+              fontSize: 20, lineHeight: 1, cursor: "pointer",
               display: "flex", alignItems: "center", justifyContent: "center",
               transition: "all 0.15s", flexShrink: 0,
             }}>+</button>
           </div>
         </div>
       </div>
+
+      {showSyncPanel && (
+        <SyncPanel
+          c={c}
+          syncCode={syncCode}
+          syncStatus={syncStatus}
+          onClose={() => setShowSyncPanel(false)}
+          onJoinCode={joinSyncCode}
+        />
+      )}
+    </div>
+  );
+}
+
+function SectionLabel({ c, text, count }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 2px 8px", fontSize: 12, fontWeight: 700, color: c.sub, letterSpacing: "-0.01em" }}>
+      <span>{text}</span>
+      <span style={{ color: c.muted, fontWeight: 500 }}>{count}</span>
     </div>
   );
 }
 
 function EmptyState({ c, text }) {
   return (
-    <div style={{
-      textAlign: "center", padding: "60px 0",
-      fontSize: 14, color: c.sub, letterSpacing: "-0.01em",
-    }}>{text}</div>
+    <div style={{ textAlign: "center", padding: "60px 0", fontSize: 14, color: c.sub, letterSpacing: "-0.01em" }}>{text}</div>
   );
+}
