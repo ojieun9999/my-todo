@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { createClient } from "@supabase/supabase-js";
-//
+
 // ─── Supabase 설정 (본인 프로젝트 값으로 교체) ──────────────────
 const SUPABASE_URL = "여기에 본인 Project URL 입력";
 const SUPABASE_ANON_KEY = "여기에 본인 anon public key 입력";
